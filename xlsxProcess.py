@@ -69,9 +69,9 @@ def toExcelErp(directory: SystemError, filename):
         df_bank.to_excel(writer, sheet_name=SHEET_NAMES["bank"], index=False)
         df_saer.to_excel(writer, sheet_name=SHEET_NAMES["saer"], index=False)
         df_combined.to_excel(writer, sheet_name=SHEET_NAMES["combined"], index=False)
-        df_pivot_out.to_excel(writer, sheet_name=SHEET_NAMES["pivot_out"])
-        df_pivot_in.to_excel(writer, sheet_name=SHEET_NAMES["pivot_in"])
-        df_pivot_comb.to_excel(writer, sheet_name=SHEET_NAMES["error_check"])
+        df_pivot_out.to_excel(writer, sheet_name=SHEET_NAMES["pivot_out"], index=False)
+        df_pivot_in.to_excel(writer, sheet_name=SHEET_NAMES["pivot_in"], index=False)
+        df_pivot_comb.to_excel(writer, sheet_name=SHEET_NAMES["error_check"], index=False)
 
 
 
