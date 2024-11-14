@@ -83,13 +83,11 @@ def combine_df_pivot_data(df_pivot_out, df_pivot_in):
     df_pivot_out = df_pivot_out[['거래일시', '은행자료', '회계자료', '출금차액','상태']]
     df_pivot_out.insert(0, '구분', SHEET_NAMES["pivot_out"])  # '구분' 컬럼 추가하기(컬럼 이름은 '시트이름'으로)
     df_pivot_out = df_pivot_out[~df_pivot_in['상태'].str.contains('오류', na=False)]    #'상태'열에서 특정 단어 포함한 행 삭제
-    #df_pivot_out = df_pivot_out.drop(columns=['']) #불필요한 열(순번 열) 삭제
 
     df_pivot_in = df_pivot_in[['거래일시', '은행자료', '회계자료', '입금차액', '상태']]
     df_pivot_in.columns = ['거래일시', '은행자료','회계자료', '출금차액', '상태']  # 컬럼명 변경(입금차액->출금차액)
     df_pivot_in.insert(0, '구분', SHEET_NAMES["pivot_in"])  # '구분' 컬럼 추가하기(컬럼 이름은 '시트이름'으로)
     df_pivot_in = df_pivot_in[~df_pivot_in['상태'].str.contains('오류', na=False)]   #'상태'열에서 특정 단어 포함한 행 삭제
-    #df_pivot_in = df_pivot_in.drop(columns=['']) #불필요한 열(순번 열) 삭제
 
     df_pivot_comb = pd.concat([df_pivot_out, df_pivot_in], ignore_index=True)
     return df_pivot_comb
