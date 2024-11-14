@@ -64,7 +64,7 @@ def toExcelErp(directory: SystemError, filename):
     # 피봇입금 + 피봇출금 데이터 가공 및 정리 / #컬럼명 변경하고 오류값만 추출하기
     df_pivot_comb = combine_df_pivot_data(df_pivot_out, df_pivot_in)
 
-    # 최종 저장
+    # 최종 저장 (->앞에서 한 저장을 한번더 반복해줘야함. 안그러면 컴바인피봇 표 시트만 생김)
     with pd.ExcelWriter(output_file_path) as writer:
         df_bank.to_excel(writer, sheet_name=SHEET_NAMES["bank"], index=False)
         df_saer.to_excel(writer, sheet_name=SHEET_NAMES["saer"], index=False)
