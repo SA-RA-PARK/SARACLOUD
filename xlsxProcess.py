@@ -1,3 +1,4 @@
+import os         #os.listdir 함수를 써야하기 때문에 import os를 함
 import pandas as pd
 import util
 
@@ -13,18 +14,27 @@ SHEET_NAMES = {
     "error_check": "오류확인대상"
 }
 
-def toExcelErp(directory: SystemError, filename):
+def toExcelErp(directory: SystemError, filename):   
     
-    # 계좌 번호 추출 및 파일 경로 설정
-    filename2 = filename.split('_')[1][-6:]
-    account_num = filename.split('_')[1]
+    # workF파일의 파일 리스트 추출하기
+    directory_workF = r'C:\IACFPYTHON\workF'
+    file_list = os.listdir(directory_workF)
+
+    # 추출한 파일 리스트에서, 파일명의 계좌번호만 추출해서 사용하기
+    file_name2 = file_list.split('_')[1][-6:]      #list는 splist을 할 수 없음...그러면 어떻게?
+    account_num = file_list.split('_')[1]
     file_paths = {
-        "bank": f"{directory}/workF/{filename}.xls",
+        "bank": f"{directory}/workF/{filename2}.xls",
         "saer": f"{directory}/workF/거래처원장 {filename2}.xls"
     }
-    output_file_path = f"{directory}/resultF/{account_num}.xlsx"
+    
+    
+    # 작업 후 생성되는 파일을 저장할 위치를 지정하고, 위치값을 변수에 저장하기(여기서 파일명은 계좌번호)
+    output_file_path = f"{directory}/resultF/{account_num}.xlsx"       #결과물 저장할 위치
     output_file_path = output_file_path.replace("workF","resultF")
     output_file_path = util.save_excel_with_seq(output_file_path)
+
+
 
     # 데이터프레임 읽기 및 전처리
     df_bank = pd.read_excel(file_paths["bank"], header=None).iloc[6:]
@@ -64,7 +74,7 @@ def toExcelErp(directory: SystemError, filename):
     # 피봇입금 + 피봇출금 데이터 가공 및 정리 / #컬럼명 변경하고 오류값만 추출하기
     df_pivot_comb = combine_df_pivot_data(df_pivot_out, df_pivot_in)
 
-    # 최종 저장 (->앞에서 한 저장을 한번더 반복해줘야함. 안그러면 컴바인피봇 표 시트만 생김)
+    # 최종 저장
     with pd.ExcelWriter(output_file_path) as writer:
         df_bank.to_excel(writer, sheet_name=SHEET_NAMES["bank"], index=False)
         df_saer.to_excel(writer, sheet_name=SHEET_NAMES["saer"], index=False)
@@ -83,11 +93,13 @@ def combine_df_pivot_data(df_pivot_out, df_pivot_in):
     df_pivot_out = df_pivot_out[['거래일시', '은행자료', '회계자료', '출금차액','상태']]
     df_pivot_out.insert(0, '구분', SHEET_NAMES["pivot_out"])  # '구분' 컬럼 추가하기(컬럼 이름은 '시트이름'으로)
     df_pivot_out = df_pivot_out[~df_pivot_in['상태'].str.contains('오류', na=False)]    #'상태'열에서 특정 단어 포함한 행 삭제
+    #df_pivot_out = df_pivot_out.drop(columns=['']) #불필요한 열(순번 열) 삭제
 
     df_pivot_in = df_pivot_in[['거래일시', '은행자료', '회계자료', '입금차액', '상태']]
     df_pivot_in.columns = ['거래일시', '은행자료','회계자료', '출금차액', '상태']  # 컬럼명 변경(입금차액->출금차액)
     df_pivot_in.insert(0, '구분', SHEET_NAMES["pivot_in"])  # '구분' 컬럼 추가하기(컬럼 이름은 '시트이름'으로)
     df_pivot_in = df_pivot_in[~df_pivot_in['상태'].str.contains('오류', na=False)]   #'상태'열에서 특정 단어 포함한 행 삭제
+    #df_pivot_in = df_pivot_in.drop(columns=['']) #불필요한 열(순번 열) 삭제
 
     df_pivot_comb = pd.concat([df_pivot_out, df_pivot_in], ignore_index=True)
     return df_pivot_comb
