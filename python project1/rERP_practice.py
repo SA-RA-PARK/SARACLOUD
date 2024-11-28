@@ -75,13 +75,13 @@ driver.switch_to.frame(iframes[1])
 
 # 6. [연구비수주현황조회]-[연구기간] 변경
 input_element = driver.find_element(By.CSS_SELECTOR,config_info["period"]["startdate_CSS"])       #시작날짜박스 찾기
-input_element.click()                                                                             # 찾은 날짜 박스 클릭
-input_element.clear()                                                                             # 디폴트 날짜 지우기
+input_element.click()                                                                             #찾은 날짜 박스 클릭
+input_element.clear()                                                                             #디폴트 날짜 지우기(방법1)
 input_element.send_keys(config_info["period"]["start_dt"])                                        #원하는 끝나는 일자 입력
 sleep(2)
 
 input_element_e = driver.find_element(By.CSS_SELECTOR,config_info["period"]["enddate_CSS"])       #끝나는 날짜박스 찾기
-input_element_e.send_keys(Keys.BACKSPACE * 10)                                                    #디폴트 날짜 지우기(백스페이스 10번)
+input_element_e.send_keys(Keys.BACKSPACE * 10)                                                    #디폴트 날짜 지우기(백스페이스 10번)(방법2)
 input_element_e.send_keys(config_info["period"]["end_dt"] + Keys.ENTER)                           #원하는 끝나는 일자 입력
 
 
