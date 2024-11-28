@@ -27,3 +27,9 @@ PW = !
 ID_CSS = #USER_NM
 PW_CSS = #USER_PW
 LOGIN_BT_CSS = #btn_login
+
+[period]
+start_dt = 20210101
+end_dt  = 20250228
+startdate_CSS = #START_DATE
+enddate_CSS = #END_DATE
