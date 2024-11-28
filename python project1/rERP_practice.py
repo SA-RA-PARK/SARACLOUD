@@ -74,12 +74,13 @@ driver.switch_to.frame(iframes[1])
 
 
 # 6. [연구비수주현황조회]-[연구기간] 변경
-input_element = driver.find_element(By.CSS_SELECTOR,config_info["period"]["startdate_CSS"])       #시작날짜박스 클릭
-input_element.send_keys(Keys.BACKSPACE * 10)                                                      #디폴트 날짜 지우기(백스페이스 10번)
-input_element.send_keys(config_info["period"]["start_dt"])
+input_element = driver.find_element(By.CSS_SELECTOR,config_info["period"]["startdate_CSS"])       #시작날짜박스 찾기
+input_element.click()                                                                             # 찾은 날짜 박스 클릭
+input_element.clear()                                                                             # 디폴트 날짜 지우기
+input_element.send_keys(config_info["period"]["start_dt"])                                        #원하는 끝나는 일자 입력
 sleep(2)
 
-input_element_e = driver.find_element(By.CSS_SELECTOR,config_info["period"]["enddate_CSS"])       #끝나는 날짜박스 클릭
+input_element_e = driver.find_element(By.CSS_SELECTOR,config_info["period"]["enddate_CSS"])       #끝나는 날짜박스 찾기
 input_element_e.send_keys(Keys.BACKSPACE * 10)                                                    #디폴트 날짜 지우기(백스페이스 10번)
 input_element_e.send_keys(config_info["period"]["end_dt"] + Keys.ENTER)                           #원하는 끝나는 일자 입력
 
@@ -124,12 +125,13 @@ sleep(3)
 driver.switch_to.default_content()
 
 # 13. 창 닫기
-driver.close()
-
-
+driver.close() 
 
 
 """
+
+
+
 ##################### 파일이름 바꾸기 ###############################################
 
 # 14. 다운로드파일 이름 변경(오늘일자로)--안먹힘 ㅠㅠ
@@ -147,12 +149,11 @@ for file in downloaded_files:
         os.rename(old_file_path, new_file_path)
         print(f"파일이 '{new_file_name}'로 저장되었습니다.") 
         break 
-"""
 
 ######################################################################################
 
 
-"""
+
 ######################  iframe 찾기  ###################################################
 # 9. [연구비수주현황(연구자)] 들어가기
 # ①연구비수주현황(연구자) 클릭을 위한 iframe찾기
@@ -180,3 +181,4 @@ driver.switch_to.frame(iframes[2])    #/rstat_0040_01.act?MENU_SEQ=680 (이 번�
 
 # ③연구비수주현황(연구자) 조회버튼 클릭
 driver.find_element(By.CSS_SELECTOR, "#btnSearch").click()
+"""
