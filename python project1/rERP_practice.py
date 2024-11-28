@@ -68,18 +68,30 @@ driver.find_element(By.CSS_SELECTOR, "#menu_id_6").click()
 sleep(3)     #다음 html이 다 뜰때까지 기다려주는거다
 
 
-# 5. [연구비수주현황whghl] iframe으로 이동   # iframe 찾는 방법은 9번 이하 참고
+# 5. [연구비수주현황조회] iframe으로 이동      # iframe 찾는 방법은 9번 이하 참고
 iframes = driver.find_elements(By.TAG_NAME, 'iframe')   
 driver.switch_to.frame(iframes[1])  
 
 
-# 6. [연구비수주현황조회]-[연구기간 : 진행기준] 클릭
+# 6. [연구비수주현황조회]-[연구기간] 변경
+input_element = driver.find_element(By.CSS_SELECTOR,config_info["period"]["startdate_CSS"])       #시작날짜박스 클릭
+input_element.send_keys(Keys.BACKSPACE * 10)                                                      #디폴트 날짜 지우기(백스페이스 10번)
+input_element.send_keys(config_info["period"]["start_dt"])
+sleep(2)
+
+input_element_e = driver.find_element(By.CSS_SELECTOR,config_info["period"]["enddate_CSS"])       #끝나는 날짜박스 클릭
+input_element_e.send_keys(Keys.BACKSPACE * 10)                                                    #디폴트 날짜 지우기(백스페이스 10번)
+input_element_e.send_keys(config_info["period"]["end_dt"] + Keys.ENTER)                           #원하는 끝나는 일자 입력
+
+
+# 7. [연구비수주현황조회]-[연구기간 : 진행기준] 클릭
 button = driver.find_element(By.CSS_SELECTOR, "#DATE_GB2")
 button.click()
 button.is_selected         #체크박스, 라디오버튼은 is_selected사용하기 / 일반 click 누르는거랑 다르다
+sleep(3)
 
 
-# 7. [연구비수주현황조회]-[과제분류] 체크박스 풀기
+# 8. [연구비수주현황조회]-[과제분류] 체크박스 풀기
 checkbox1 = driver.find_element(By.CSS_SELECTOR, "#PRJ_CATE_CD_02")    #연구시설장비비통합과제 체크박스 풀기
 checkbox2 = driver.find_element(By.CSS_SELECTOR, "#PRJ_CATE_CD_04")    #인건비풀링과제 체크박스 풀기          
 if checkbox1.is_selected(): checkbox1.click()     # 체크풀기(체크박스1)
@@ -87,15 +99,15 @@ if checkbox2.is_selected(): checkbox2.click()     # 체크풀기(체크박스2)
 #if not checkbox.is_selected(): checkbox.click()  #체크안된거면 체크하기
 
 
-# 8. [연구비수주현황조회]-[조회] 클릭
+# 9. [연구비수주현황조회]-[조회] 클릭
 driver.find_element(By.CSS_SELECTOR, "#btnSearch").click()   
 sleep(10)
 
-# 9. [파일저장] 클릭
+# 10. [파일저장] 클릭
 driver.find_element(By.CSS_SELECTOR, "#gridDonw > img").click()   
 sleep(3)
 
-# 10. 사유 적기
+# 11. 사유 적기
 # ①사유창 열기
 sleep(5)                                  #팝업이 뜨는 속도와 닫는 속도가 다를 수 있으니까 앞에서 sleep을 주는거다. 보통 5초 정도 준다.
 all_windows = driver.window_handles       #뜨는 모든 팝업창을 다 가지고 오기 / 새로운 창이 떴다면, 새로운 창으로 전환
@@ -108,13 +120,19 @@ driver.find_element(By.CSS_SELECTOR,"#FILE_DOWN_DESC").send_keys("실적조회")
 driver.find_element(By.CSS_SELECTOR, "#btnSaveDesc > a").click()   #확인버튼 클릭
 sleep(3)
 
-# 11. 다시 원래 프레임으로 돌아오기
+# 12. 다시 원래 프레임으로 돌아오기
 driver.switch_to.default_content()
 
-# 12. 창 닫기
+# 13. 창 닫기
 driver.close()
 
-# 13. 다운로드파일 이름 변경(오늘일자로)--안먹힘 ㅠㅠ
+
+
+
+"""
+##################### 파일이름 바꾸기 ######################################
+
+# 14. 다운로드파일 이름 변경(오늘일자로)--안먹힘 ㅠㅠ
 # ①다운로드된 파일 확인 및 이름 변경 
 downloaded_files = os.listdir(config_info["folder"]["work"])
 
@@ -127,8 +145,11 @@ for file in downloaded_files:
         new_file_name = f"{today_date}.xlsx"  # 오늘 날짜로 이름 변경
         new_file_path = os.path.join(config_info["folder"]["work"], new_file_name)
         os.rename(old_file_path, new_file_path)
-        print(f"파일이 '{new_file_name}'로 저장되었습니다.")
-        break
+        print(f"파일이 '{new_file_name}'로 저장되었습니다.") 
+        break 
+"""
+
+
 
 
 """
@@ -158,7 +179,8 @@ for i, iframe in enumerate(iframes):
 driver.switch_to.frame(iframes[2])    #/rstat_0040_01.act?MENU_SEQ=680 (이 번호는 검사해서 찾아보면 확인가능) → iframe 2번이랑 번호가 같음(680)
 
 # ③연구비수주현황(연구자) 조회버튼 클릭
-driver.find_element(By.CSS_SELECTOR, "#btnSearch").click()   """
+driver.find_element(By.CSS_SELECTOR, "#btnSearch").click()
+"""
 
 
 
