@@ -1,7 +1,7 @@
 [login]
 NAME = 박사라
 ID = 752062
-PW = Ssandan4178!
+PW = !
 EMAIL = godsara416@sejong.ac.kr
 
 [setting]
@@ -23,7 +23,7 @@ SEARCHKEY_DAYS = 20
 [iacf]
 URL = https://iacf.sejong.ac.kr/
 ID = 752062
-PW = Ssandan4178!
+PW = !
 ID_CSS = #USER_NM
 PW_CSS = #USER_PW
 LOGIN_BT_CSS = #btn_login
