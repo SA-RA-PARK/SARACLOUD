@@ -1,0 +1,29 @@
+[login]
+NAME = 박사라
+ID = 752062
+PW = Ssandan4178!
+EMAIL = godsara416@sejong.ac.kr
+
+[setting]
+SEARCHKEYWORD = IACFPYTHON
+CONSOLETF = True
+DOWNLOADS = %%UserProfile%%\Downloads
+
+[mail]
+URL = https://mail.sejong.ac.kr
+ID_CSS = #mailid
+PW_CSS = #password
+LOGIN_BT_CSS = #loginForm > div.login.skin1 > section > div > div.login_content > div.login_form.non_findId > div.input_area > ul > li.btn_line > button
+WRITE_BT_CSS = #wrap > div.left_area > div > div.left_write_bt.\\30 3 > ul > li:nth-child(1) > button
+SMTP_SERVER = smtp.sejong.ac.kr
+SMTP_PORT = 25
+IMAP_SERVER  = imap.sejong.ac.kr
+SEARCHKEY_DAYS = 20
+
+[iacf]
+URL = https://iacf.sejong.ac.kr/
+ID = 752062
+PW = Ssandan4178!
+ID_CSS = #USER_NM
+PW_CSS = #USER_PW
+LOGIN_BT_CSS = #btn_login
