@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 import os
 from openpyxl import load_workbook
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, Font
 from openpyxl.styles import NamedStyle
 
 
@@ -56,14 +56,15 @@ if file_list:
                 'A': 11,   # A열
                 'B': 33,   # B열
                 'C': 67,   # C열
-                'D': 10,   # D열
+                'D': 12,   # D열
                 'E': 8,    # E열
                 'F': 17,   # F열
                 'G': 17,   # G열
                 'H': 17,   # H열
-                'I': 11,   # I열
-                'J': 11,   # J열
+                'I': 13,   # I열
+                'J': 13,   # J열
             }
+
 
             # 지정된 열 너비 적용
             for col_letter, col_width in column_widths.items():
@@ -72,19 +73,28 @@ if file_list:
             # 첫 번째 행의 높이를 32로 설정
             worksheet.row_dimensions[1].height = 32
 
+            # 첫 번째 행 가운데 정렬
+            for cell in worksheet[1]:
+                cell.alignment = Alignment(horizontal='center', vertical='center')
 
-            # 모든 셀을 '가운데 맞춤' 및 '가운데 정렬'로 설정 (B, C 열 제외)
+
+            # 글씨 크기 10으로 설정
+            font_style = Font(size=10)  # 글씨 크기를 10으로 설정
+
+
+            # 모든 셀을 '가운데 맞춤'으로 설정
             for row in worksheet.iter_rows():
                 for cell in row:
-                    # B열과 C열을 제외한 모든 열에 대해 가운데 정렬
-                    if cell.column_letter not in ['B', 'C']:
-                        cell.alignment = Alignment(horizontal='center', vertical='center')
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+
+                    # 모든 셀에 글씨 크기 10 적용
+                    cell.font = Font(size=10)
+
 
             # H열(인덱스 8)의 모든 셀에 '쉼표 스타일' 적용
             for row in worksheet.iter_rows(min_col=8, max_col=8):
                 for cell in row:
                     cell.number_format = '#,##0'  # 쉼표 스타일 적용
-
 
         print(f"작업 완료: '{new_file_name}'에 데이터가 저장되었습니다.")
 
