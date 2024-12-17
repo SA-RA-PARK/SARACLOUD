@@ -20,8 +20,13 @@ def clean_value(value):
     return value
 
 # 작업할 폴더 경로
-folder_path = r"C:\\IACFPYTHON\\myproject\\work"
+folder_path = r"C:\\IACFPYTHON\\myproject\\RnD_list"
 file_list = [f for f in os.listdir(folder_path) if f.endswith('.xlsx') and not f.startswith('~$')]
+
+# "result" 폴더 경로 지정 및 폴더 없으면 생성
+result_folder = os.path.join(folder_path, "result")
+if not os.path.exists(result_folder):
+    os.makedirs(result_folder)
 
 if file_list:
     for file in file_list:
@@ -50,10 +55,9 @@ if file_list:
         selected_columns = df_filtered_sorted.iloc[:, selected_columns_indices]
 
         # "오늘날짜" 시트에는 D,M,U열 필터링, 날짜열 처리, 정렬 단계까지만 반영
-        # M열 정제 및 패턴 제거, 중복 제거는 아직 하지 않은 상태의 selected_columns 저장
         today_date = datetime.now().strftime('%Y-%m-%d')
         new_file_name = f"{today_date}_{file}"
-        new_file_path = os.path.join(folder_path, new_file_name)
+        new_file_path = os.path.join(result_folder, new_file_name)  # result 폴더에 저장
 
         with pd.ExcelWriter(new_file_path, engine='openpyxl') as writer:
             # "오늘날짜" 시트 저장 (여기까지만: 필터링, 날짜열 처리, 정렬)
@@ -63,19 +67,17 @@ if file_list:
             # 4) M열(13번째 열) 데이터 정제
             df_filtered_sorted.iloc[:, 12] = df_filtered_sorted.iloc[:, 12].apply(clean_value)
 
-
             # 7) 문자열 중간에 "(X차년도 ... )" 패턴 제거
             df_filtered_sorted.iloc[:, 12] = df_filtered_sorted.iloc[:, 12].str.replace(r'\(\d+차년도[^\)]*\)', '', regex=True)
 
             # 8) 문자열 끝에 "_X차년도" 패턴 제거
             df_filtered_sorted.iloc[:, 12] = df_filtered_sorted.iloc[:, 12].str.replace(r'_\d+차년도$', '', regex=True)
 
-            # 8) (X단계-Y차년도)나 (X단계_Y차년도) -> (X단계)
+            # (X단계-Y차년도)나 (X단계_Y차년도) -> (X단계)
             df_filtered_sorted.iloc[:, 12] = df_filtered_sorted.iloc[:, 12].str.replace(r'\((\d+단계)[-_]\d+차년도\)', r'(\1)', regex=True)
 
-            # 9) (X단계(차년도)) -> X단계
+            # (X단계(차년도)) -> X단계
             df_filtered_sorted.iloc[:, 12] = df_filtered_sorted.iloc[:, 12].str.replace(r'(\d+단계)\(\d+차년도\)', r'\1', regex=True)
-
 
             # 10) 필요시 양쪽 공백 제거
             df_filtered_sorted.iloc[:, 12] = df_filtered_sorted.iloc[:, 12].str.strip()
@@ -100,7 +102,6 @@ if file_list:
             worksheet_today = workbook[today_date]
             worksheet_no_duplicates = workbook[f"중복제거({today_date})"]
 
-             
             # 첫 번째 행을 고정하기 위해 A2 셀을 freeze_panes로 설정
             worksheet_today.freeze_panes = "A2"
             worksheet_no_duplicates.freeze_panes = "A2"
@@ -135,7 +136,6 @@ if file_list:
                     cell.alignment = Alignment(horizontal='center', vertical='center')
                     cell.font = Font(size=10)
             
-
             # 첫 번째 행 높이 설정
             worksheet_today.row_dimensions[1].height = 32
             worksheet_no_duplicates.row_dimensions[1].height = 32
@@ -150,8 +150,6 @@ if file_list:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
                 cell.font = Font(name="맑은 고딕", size=10.5, bold=True)
                 cell.fill = PatternFill(start_color='BFBFBF', end_color='BFBFBF', fill_type='solid')
-
-
 
             # B열(2번 컬럼) 2행부터 왼쪽 정렬
             for row in worksheet_today.iter_rows(min_row=2, max_row=worksheet_today.max_row, min_col=2, max_col=2):
