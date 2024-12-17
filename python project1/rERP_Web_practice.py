@@ -128,3 +128,5 @@ driver.switch_to.default_content()
 
 # 13. 창 닫기
 driver.close() 
+
+print("다운로드 완료")
