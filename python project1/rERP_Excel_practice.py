@@ -189,6 +189,11 @@ def post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_pat
     # 14) 중복 제거: 과제명 컬럼(인덱스 2)
     df_no_duplicates = selected_columns_cleaned.drop_duplicates(subset=[selected_columns_cleaned.columns[2]])
 
+
+    # 15) 중복제거 후 날짜 컬럼(인덱스 0)에 오늘 날짜로 값 설정
+    df_no_duplicates.iloc[:, 0] = pd.to_datetime(datetime.today().strftime('%Y-%m-%d')).date()
+    
+
     with pd.ExcelWriter(new_file_path, engine='openpyxl', mode='a') as writer:
         workbook = writer.book
 
