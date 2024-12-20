@@ -1,5 +1,6 @@
 import os
 import re
+import util as ut
 from datetime import datetime, timedelta
 import pandas as pd
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
@@ -19,7 +20,8 @@ def clean_value(value):
             value = re.sub(r'\(.*?차\)', '', value).strip()
     return value
 
-folder_path = r"C:\\IACFPYTHON\\myproject\\RnD_list"
+current_path = ut.exedir('py')
+folder_path = os.path.join(current_path, "RnD_list\\")
 result_folder = os.path.join(folder_path, "result")
 
 if not os.path.exists(result_folder):
@@ -168,7 +170,7 @@ def post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_pat
 
     # 6~10) 과제명(C열) 관련 정제
     df_filtered_sorted.iloc[:, 2] = df_filtered_sorted.iloc[:, 2].apply(clean_value)
-    df_filtered_sorted.iloc[:, 2] = df_filtered_sorted.iloc[:, 2].str.replace(r'\(\d+차년도[^\)]*\)', '', regex=True)
+    df_filtered_sorted.iloc[:, 2] = df_filtered_sorted.iloc[:, 2].astype(str).str.replace(r'\(\d+차년도[^\)]*\)', '', regex=True)
     df_filtered_sorted.iloc[:, 2] = df_filtered_sorted.iloc[:, 2].str.replace(r'_\d+차년도$', '', regex=True)
     df_filtered_sorted.iloc[:, 2] = df_filtered_sorted.iloc[:, 2].str.replace(r'\((\d+단계)[-_]\d+차년도\)', r'(\1)', regex=True)
     df_filtered_sorted.iloc[:, 2] = df_filtered_sorted.iloc[:, 2].str.replace(r'(\d+단계)\(\d+차년도\)', r'\1', regex=True)
@@ -215,76 +217,77 @@ def post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_pat
 ########################
 # 메인 로직
 ########################
-if previous_result_file is None:
-    # 최초 실행
-    latest_source_file = get_latest_file_in_folder(folder_path)
-    if latest_source_file is None:
-        print("작업할 엑셀 파일이 없습니다.")
+def rERP_Excel_main() :
+    if previous_result_file is None:
+        # 최초 실행
+        latest_source_file = get_latest_file_in_folder(folder_path)
+        if latest_source_file is None:
+            print("작업할 엑셀 파일이 없습니다.")
+        else:
+            df = pd.read_excel(latest_source_file, engine='openpyxl')
+            df_filtered_sorted, selected_columns, selected_columns_indices = initial_processing(df)
+
+            new_file_name = f"{today_date}_{os.path.basename(latest_source_file)}"
+            new_file_path = os.path.join(result_folder, new_file_name)
+
+            # "오늘날짜" 시트 저장
+            with pd.ExcelWriter(new_file_path, engine='openpyxl') as writer:
+                selected_columns.to_excel(writer, sheet_name=today_date, index=False)
+                workbook = writer.book
+                # 여기서 최소한의 포맷팅 적용 가능(원한다면)
+                workbook.save(new_file_path)
+
+            # "중복제거(오늘날짜)" 시트 생성
+            # 여기서는 초기 실행이므로 df_filtered_sorted 그대로 사용
+            post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_path)
+
+            print(f"최초 작업 완료: '{new_file_path}'에 데이터가 저장되었습니다.")
+
     else:
+        # 최초 실행 이후
+        latest_source_file = get_latest_file_in_folder(folder_path)
+        if latest_source_file is None:
+            print("작업할 엑셀 파일이 없습니다.")
+            exit()
+
         df = pd.read_excel(latest_source_file, engine='openpyxl')
         df_filtered_sorted, selected_columns, selected_columns_indices = initial_processing(df)
 
-        new_file_name = f"{today_date}_{os.path.basename(latest_source_file)}"
-        new_file_path = os.path.join(result_folder, new_file_name)
+        # 어제 날짜로 작업한 result 파일 열기
+        yesterday_file_path = None
+        for f in os.listdir(result_folder):
+            if f.startswith(yesterday_date):
+                yesterday_file_path = os.path.join(result_folder, f)
+                break
 
-        # "오늘날짜" 시트 저장
-        with pd.ExcelWriter(new_file_path, engine='openpyxl') as writer:
-            selected_columns.to_excel(writer, sheet_name=today_date, index=False)
-            workbook = writer.book
-            # 여기서 최소한의 포맷팅 적용 가능(원한다면)
-            workbook.save(new_file_path)
+        if yesterday_file_path is None:
+            print("어제 날짜 파일을 찾을 수 없습니다. 최초 작업이거나 파일 이름 규칙을 확인하세요.")
+            exit()
 
-        # "중복제거(오늘날짜)" 시트 생성
-        # 여기서는 초기 실행이므로 df_filtered_sorted 그대로 사용
-        post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_path)
+        # 어제 파일 열어 1번 시트(어제 날짜 시트)에 selected_columns append
+        wb = load_workbook(yesterday_file_path)
+        if yesterday_date in wb.sheetnames:
+            ws = wb[yesterday_date]
+            last_row = ws.max_row
+            for r_i, row_data in enumerate(selected_columns.values, start=last_row+1):
+                for c_i, val in enumerate(row_data, start=1):
+                    ws.cell(row=r_i, column=c_i, value=val)
 
-        print(f"최초 작업 완료: '{new_file_path}'에 데이터가 저장되었습니다.")
+            # 시트 이름을 오늘날짜로 변경
+            wb[yesterday_date].title = today_date
+            updated_file_path = os.path.join(result_folder, f"{today_date}_{os.path.basename(latest_source_file)}")
+            wb.save(updated_file_path)
+            wb.close()
 
-else:
-    # 최초 실행 이후
-    latest_source_file = get_latest_file_in_folder(folder_path)
-    if latest_source_file is None:
-        print("작업할 엑셀 파일이 없습니다.")
-        exit()
+            # 7) 오늘날짜로 새로 저장한 시트를 읽고 post_processing 진행
+            df_for_post = pd.read_excel(updated_file_path, sheet_name=today_date, engine='openpyxl')
+            df_filtered_sorted_post = df_for_post.copy()
 
-    df = pd.read_excel(latest_source_file, engine='openpyxl')
-    df_filtered_sorted, selected_columns, selected_columns_indices = initial_processing(df)
+            # post_processing 호출 시 df_filtered_sorted_post, today_date, yesterday_date, new_file_path 사용
+            # new_file_path는 updated_file_path와 동일하게 사용 가능
+            new_file_path = updated_file_path
+            post_processing(df_filtered_sorted_post, today_date, yesterday_date, new_file_path)
 
-    # 어제 날짜로 작업한 result 파일 열기
-    yesterday_file_path = None
-    for f in os.listdir(result_folder):
-        if f.startswith(yesterday_date):
-            yesterday_file_path = os.path.join(result_folder, f)
-            break
-
-    if yesterday_file_path is None:
-        print("어제 날짜 파일을 찾을 수 없습니다. 최초 작업이거나 파일 이름 규칙을 확인하세요.")
-        exit()
-
-    # 어제 파일 열어 1번 시트(어제 날짜 시트)에 selected_columns append
-    wb = load_workbook(yesterday_file_path)
-    if yesterday_date in wb.sheetnames:
-        ws = wb[yesterday_date]
-        last_row = ws.max_row
-        for r_i, row_data in enumerate(selected_columns.values, start=last_row+1):
-            for c_i, val in enumerate(row_data, start=1):
-                ws.cell(row=r_i, column=c_i, value=val)
-
-        # 시트 이름을 오늘날짜로 변경
-        wb[yesterday_date].title = today_date
-        updated_file_path = os.path.join(result_folder, f"{today_date}_{os.path.basename(latest_source_file)}")
-        wb.save(updated_file_path)
-        wb.close()
-
-        # 7) 오늘날짜로 새로 저장한 시트를 읽고 post_processing 진행
-        df_for_post = pd.read_excel(updated_file_path, sheet_name=today_date, engine='openpyxl')
-        df_filtered_sorted_post = df_for_post.copy()
-
-        # post_processing 호출 시 df_filtered_sorted_post, today_date, yesterday_date, new_file_path 사용
-        # new_file_path는 updated_file_path와 동일하게 사용 가능
-        new_file_path = updated_file_path
-        post_processing(df_filtered_sorted_post, today_date, yesterday_date, new_file_path)
-
-        print(f"일일 작업 완료: '{updated_file_path}'에 오늘날짜 시트 갱신 및 중복제거 시트 저장 완료.")
-    else:
-        print("어제 날짜 시트를 찾을 수 없습니다. 파일 구조를 확인하세요.")
+            print(f"일일 작업 완료: '{updated_file_path}'에 오늘날짜 시트 갱신 및 중복제거 시트 저장 완료.")
+        else:
+            print("어제 날짜 시트를 찾을 수 없습니다. 파일 구조를 확인하세요.")
