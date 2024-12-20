@@ -27,9 +27,8 @@ result_folder = os.path.join(folder_path, "result")
 if not os.path.exists(result_folder):
     os.makedirs(result_folder)
 
-# 오늘 날짜, 어제 날짜
+# 오늘 날짜
 today_date = datetime.now().strftime('%Y-%m-%d')
-yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
 def get_latest_file_in_folder(folder, extension='.xlsx'):
     files = [f for f in os.listdir(folder) if f.endswith(extension) and not f.startswith('~$')]
@@ -38,7 +37,7 @@ def get_latest_file_in_folder(folder, extension='.xlsx'):
     files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(folder, x)), reverse=True)
     return os.path.join(folder, files[0])
 
-# 최초 작업 여부 판단: result 폴더에 이전 결과가 있는지로 판단
+# 가장 최신의 이전 결과 파일(있다면)
 previous_result_file = get_latest_file_in_folder(result_folder)
 
 #######################
@@ -164,7 +163,7 @@ def initial_processing(df):
 #############################
 # Steps 6~14 수행 함수 정의
 #############################
-def post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_path):
+def post_processing(df_filtered_sorted, today_date, previous_date, new_file_path):
     # 명시적 복사로 SettingWithCopyWarning 방지
     df_filtered_sorted = df_filtered_sorted.copy()
 
@@ -184,7 +183,7 @@ def post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_pat
         ascending=[False, True, True]
     )
 
-    # 필요 열 선택 (여기서는 첫 10개 열 가정)
+    # 13) 필요 열 선택 (여기서는 첫 10개 열 가정)
     selected_columns_cleaned_indices = [0,1,2,3,4,5,6,7,8,9]
     selected_columns_cleaned = df_filtered_sorted.iloc[:, selected_columns_cleaned_indices]
 
@@ -199,10 +198,11 @@ def post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_pat
     with pd.ExcelWriter(new_file_path, engine='openpyxl', mode='a') as writer:
         workbook = writer.book
 
-        # "중복제거(어제날짜)" 시트 삭제
-        yesterday_sheet_name = f"중복제거({yesterday_date})"
-        if yesterday_sheet_name in workbook.sheetnames:
-            del workbook[yesterday_sheet_name]
+        # 이전 날짜 시트 명시적 제거
+        previous_sheet_name = f"중복제거({previous_date})"
+        if previous_sheet_name in workbook.sheetnames:
+            del workbook[previous_sheet_name]
+
 
         # "중복제거(오늘날짜)" 시트가 이미 있으면 삭제
         today_sheet_name = f"중복제거({today_date})"
@@ -227,6 +227,7 @@ def rERP_Excel_main() :
             df = pd.read_excel(latest_source_file, engine='openpyxl')
             df_filtered_sorted, selected_columns, selected_columns_indices = initial_processing(df)
 
+
             new_file_name = f"{today_date}_{os.path.basename(latest_source_file)}"
             new_file_path = os.path.join(result_folder, new_file_name)
 
@@ -234,60 +235,55 @@ def rERP_Excel_main() :
             with pd.ExcelWriter(new_file_path, engine='openpyxl') as writer:
                 selected_columns.to_excel(writer, sheet_name=today_date, index=False)
                 workbook = writer.book
-                # 여기서 최소한의 포맷팅 적용 가능(원한다면)
                 workbook.save(new_file_path)
 
             # "중복제거(오늘날짜)" 시트 생성
             # 여기서는 초기 실행이므로 df_filtered_sorted 그대로 사용
-            post_processing(df_filtered_sorted, today_date, yesterday_date, new_file_path)
+            post_processing(df_filtered_sorted, today_date, today_date, new_file_path)
 
             print(f"최초 작업 완료: '{new_file_path}'에 데이터가 저장되었습니다.")
 
     else:
-        # 최초 실행 이후
+        # 이후 실행: 이전 실행 결과 파일이 존재
         latest_source_file = get_latest_file_in_folder(folder_path)
         if latest_source_file is None:
             print("작업할 엑셀 파일이 없습니다.")
-            exit()
+            return
 
         df = pd.read_excel(latest_source_file, engine='openpyxl')
         df_filtered_sorted, selected_columns, selected_columns_indices = initial_processing(df)
 
-        # 어제 날짜로 작업한 result 파일 열기
-        yesterday_file_path = None
-        for f in os.listdir(result_folder):
-            if f.startswith(yesterday_date):
-                yesterday_file_path = os.path.join(result_folder, f)
-                break
+        # 이전 결과 파일을 기준으로 작업
+        previous_file_path = previous_result_file
+        wb = load_workbook(previous_file_path)
+        
+        # 이전 결과 파일 내에서 날짜 형식의 시트를 찾아 이전 날짜(previous_date)를 구함
+        date_sheets = [s for s in wb.sheetnames if re.match(r'\d{4}-\d{2}-\d{2}', s)]
+        if not date_sheets:
+            print("이전 결과 파일에서 날짜 기반 시트를 찾지 못했습니다.")
+            return
 
-        if yesterday_file_path is None:
-            print("어제 날짜 파일을 찾을 수 없습니다. 최초 작업이거나 파일 이름 규칙을 확인하세요.")
-            exit()
+        # 가장 마지막 날짜 시트를 이전 날짜로 간주
+        previous_date = date_sheets[-1]
 
-        # 어제 파일 열어 1번 시트(어제 날짜 시트)에 selected_columns append
-        wb = load_workbook(yesterday_file_path)
-        if yesterday_date in wb.sheetnames:
-            ws = wb[yesterday_date]
-            last_row = ws.max_row
-            for r_i, row_data in enumerate(selected_columns.values, start=last_row+1):
-                for c_i, val in enumerate(row_data, start=1):
-                    ws.cell(row=r_i, column=c_i, value=val)
+        ws = wb[previous_date]
+        last_row = ws.max_row
+        for r_i, row_data in enumerate(selected_columns.values, start=last_row+1):
+            for c_i, val in enumerate(row_data, start=1):
+                ws.cell(row=r_i, column=c_i, value=val)
 
-            # 시트 이름을 오늘날짜로 변경
-            wb[yesterday_date].title = today_date
-            updated_file_path = os.path.join(result_folder, f"{today_date}_{os.path.basename(latest_source_file)}")
-            wb.save(updated_file_path)
-            wb.close()
+        # 이전 날짜 시트를 오늘 날짜 시트로 이름 변경
+        wb[previous_date].title = today_date
 
-            # 7) 오늘날짜로 새로 저장한 시트를 읽고 post_processing 진행
-            df_for_post = pd.read_excel(updated_file_path, sheet_name=today_date, engine='openpyxl')
-            df_filtered_sorted_post = df_for_post.copy()
+        updated_file_path = os.path.join(result_folder, f"{today_date}_{os.path.basename(latest_source_file)}")
+        wb.save(updated_file_path)
+        wb.close()
 
-            # post_processing 호출 시 df_filtered_sorted_post, today_date, yesterday_date, new_file_path 사용
-            # new_file_path는 updated_file_path와 동일하게 사용 가능
-            new_file_path = updated_file_path
-            post_processing(df_filtered_sorted_post, today_date, yesterday_date, new_file_path)
+        # post_processing 실행
+        df_for_post = pd.read_excel(updated_file_path, sheet_name=today_date, engine='openpyxl')
+        df_filtered_sorted_post = df_for_post.copy()
 
-            print(f"일일 작업 완료: '{updated_file_path}'에 오늘날짜 시트 갱신 및 중복제거 시트 저장 완료.")
-        else:
-            print("어제 날짜 시트를 찾을 수 없습니다. 파일 구조를 확인하세요.")
+        # 이전 날짜 정보(previous_date)를 활용하여 중복제거 시트 갱신
+        post_processing(df_filtered_sorted_post, today_date, previous_date, updated_file_path)
+
+        print(f"일일 작업 완료: '{updated_file_path}'에 오늘날짜 시트 갱신 및 중복제거 시트 저장 완료.")
