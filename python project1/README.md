@@ -1,7 +1,7 @@
 python교육 첫 프로젝트 **[연구수주현황 목록]**
 
 ㅇ내용
-  - 산단 ERP 시스템 [통계]메뉴에서 연구비수주현황 다운로드 후 excel파일로 정리 및 누적관리
+  - '연구행정통합시스템'홈페이지 [통계]메뉴에서 연구비수주현황 다운로드 후 excel파일로 정리 및 누적관리
   - 시나리오 - https://docs.google.com/document/d/1WudrHI8Wp5DB-S_QYvcSQxN7c9ht2QxzjE_bDYVPD1c/edit?tab=t.nyqcy730xmn
 
 ㅇ진행경과
