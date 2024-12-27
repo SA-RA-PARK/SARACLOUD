@@ -41,7 +41,8 @@ def rERP_Web_main() :
 
     # 1. 웹페이지 해당 주소(iacf.sejong.ac.kr)로 이동
     driver.get(config_info["iacf"]["URL"])       #config.txt에 있는 url을 가지고 오는거다.
-    driver.maximize_window()
+    #driver.maximize_window()
+  
 
     main_window = driver.current_window_handle     #떠있는 화면을 handling하는거다.
 
@@ -63,7 +64,8 @@ def rERP_Web_main() :
 
     # 4. [통계]메뉴 버튼 누르기
     driver.find_element(By.CSS_SELECTOR, "#menu_id_6").click() 
-    sleep(3)     #다음 html이 다 뜰때까지 기다려주는거다
+    sleep(12)     #다음 html이 다 뜰때까지 기다려주는거다
+    #원래 sleep은 3초이나 영상녹화-화면 크기 조정을 위해 12초로 늘려놓았음
 
 
     # 5. [연구비수주현황조회] iframe으로 이동      # iframe 찾는 방법은 9번 이하 참고
